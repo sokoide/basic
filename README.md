@@ -15,6 +15,9 @@
 * max characters per line is 32
 * please refer to `test.bas` and `test2.bas` for more details
 
+## Unit Test Requirements
+
+* install `check` at <https://libcheck.github.io/check/web/install.html>
 
 ## Example
 

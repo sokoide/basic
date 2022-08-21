@@ -11,6 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_LINE_NO (65535)
+#define MAX_LINE_LEN (255)
+#define MAX_NODES (64)
+#define MAX_BASMEM (4096)
+
+extern char lines[MAX_BASMEM];
+extern uint16_t szLines;
+
 typedef enum _nodeType {
     ndNotUsed,
     ndNull,
@@ -62,6 +70,12 @@ typedef struct _token {
     uint16_t len;   // token length
 } token;
 
+typedef struct _basline {
+    uint16_t lineno;
+    uint8_t len;
+    char line[];
+} basline;
+
 void start();
 void print(const char*);
 void list();
@@ -73,6 +87,7 @@ token getToken(uint16_t lineno, uint16_t* offset, bool peek);
 void reset();
 void resetNodes();
 void resetVars();
+void resetLines();
 node* newNode(nodeType type, node* lhs, node* rhs);
 void freeNode(node* n);
 bool consume(tokType type, uint16_t lineno, uint16_t* offset);
@@ -86,3 +101,7 @@ void eval(node* n);
 uint16_t parseLine(char* buf, size_t len, char** instr);
 void syntaxError(uint16_t lineno);
 uint16_t tok2I(token* t);
+bool upsertLine(uint16_t lineno, const char* line);
+uint8_t* linePos(uint16_t lineno, uint8_t* len);
+void moveMemoryDown(char* srcStart, char* srcEnd, char* dstEnd);
+void moveMemoryUp(char* srcStart, char* srcEnd, char* dstStart);
