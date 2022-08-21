@@ -12,7 +12,7 @@
 * `+`, `-`, `*`, `/`, `%` are supported
 * expression evaluation only has 64 nodes to make a temporary parse tree for condtion in `if`
 * basic line number must be between 1 and 200 (inclusive)
-* max characters per line is 200
+* max characters per line is 32
 * please refer to `test.bas` and `test2.bas` for more details
 
 
