@@ -6,14 +6,13 @@ node nodes[MAX_NODES];
 int vars[26];
 
 void start() {
-    char buf[MAX_LINE_LEN];
+    char buf[MAX_LINE_LEN + 1];
     char msg[64];
     uint16_t lineno;
     char* instr;
 
     memset(buf, 0, sizeof(buf));
     memset(msg, 0, sizeof(msg));
-    reset();
 
     print("> ");
     getLine(buf, sizeof(buf));
@@ -29,10 +28,13 @@ void start() {
     } else {
         lineno = parseLine(buf, sizeof(buf), &instr);
 
-        if (lineno > 0 && lineno <= MAX_LINE_LEN) {
-            // TODO:
-            /* memcpy(lines[lineno - 1], instr, LINE_LEN); */
-            /* sprintf(msg, "line:%d, %s\r\n", lineno, instr); */
+        if (lineno > 0 && strlen(buf) < MAX_LINE_LEN &&
+            strlen(buf) + 3 + szLines < MAX_BASMEM) {
+            bool b = upsertLine(lineno, instr);
+            if (b)
+                sprintf(msg, "line:%d, %s\r\n", lineno, instr);
+            else
+                sprintf(msg, "failed to usertLine %d, %s\r\n", lineno, instr);
         } else {
             sprintf(msg, "line number must be between 1 and %d\r\n",
                     MAX_LINE_LEN);
@@ -50,22 +52,22 @@ void print(const char* msg) {
 }
 
 void list() {
-    // TODO:
-    /* for (int i = 0; i < MAX_LINES; i++) { */
-    /*     if (lines[i][0] != '\0') { */
-    /*         char msg[64]; */
-    /*         sprintf(msg, "%d %s\r\n", i + 1, lines[i]); */
-    /*         print(msg); */
-    /*     } */
-    /* } */
+    uint16_t idx = 0;
+    char buf[MAX_LINE_LEN + 1];
+
+    basline* p;
+    while (idx < MAX_BASMEM) {
+        p = (basline*)&lines[idx];
+        if (p->lineno == 0)
+            break;
+        strncpy(buf, p->line, p->len);
+        buf[p->len] = '\0';
+        printf("%d %s\n", p->lineno, buf);
+        idx += 3 + p->len;
+    }
 }
 
-void newList() {
-    // TODO:
-    /* for (int i = 0; i < MAX_LINES; i++) { */
-    /*     lines[i][0] = '\0'; */
-    /* } */
-}
+void newList() { resetLines(); }
 
 void run() {
     uint16_t lineno = 1;
@@ -87,7 +89,8 @@ void run() {
     /*             n = evaluateExpression(lineno, &offset); */
     /*             if (n->type == ndString) { */
     /*                 print(n->svalue); */
-    /*             } else if (n->type == ndInteger || n->type == ndIdent) { */
+    /*             } else if (n->type == ndInteger || n->type ==
+     * ndIdent) { */
     /*                 char msg[32]; */
     /*                 sprintf(msg, "%d", n->ivalue); */
     /*                 print(msg); */
@@ -98,12 +101,14 @@ void run() {
     /*         } else if (tok.type == tkGoto) { */
     /*             done = true; */
     /*             n = evaluateExpression(lineno, &offset); */
-    /*             // since it's incremented outside of the while loop */
+    /*             // since it's incremented outside of the while loop
+     */
     /*             lineno = n->ivalue - 1; */
     /*             freeNode(n); */
     /*         } else if (tok.type == tkIf) { */
     /*             n = evaluateExpression(lineno, &offset); */
-    /*             if ((n->type == ndInteger || n->type == ndIdent) && */
+    /*             if ((n->type == ndInteger || n->type == ndIdent) &&
+     */
     /*                 n->ivalue == 0) { */
     /*                 done = true; */
     /*             } else { */
@@ -264,13 +269,15 @@ token getToken(uint16_t lineno, uint16_t* offset, bool peek) {
     /*         c = lines[lineno - 1][*offset + i]; */
     /*     } */
     /*     tok.len = i; */
-    /*     if (strncmp("goto", &lines[lineno - 1][tok.start], tok.len) == 0) {
+    /*     if (strncmp("goto", &lines[lineno - 1][tok.start], tok.len)
+     * == 0) {
      */
     /*         tok.type = tkGoto; */
-    /*     } else if (strncmp("if", &lines[lineno - 1][tok.start], tok.len) ==
-     * 0) { */
+    /*     } else if (strncmp("if", &lines[lineno - 1][tok.start],
+     * tok.len) == 0) { */
     /*         tok.type = tkIf; */
-    /*     } else if (strncmp("print", &lines[lineno - 1][tok.start], tok.len)
+    /*     } else if (strncmp("print", &lines[lineno - 1][tok.start],
+     * tok.len)
      * == */
     /*                0) { */
     /*         tok.type = tkPrint; */
@@ -306,7 +313,7 @@ void resetLines() {
 }
 
 void resetVars() {
-    for (int i = 0; i < sizeof(vars) / sizeof(vars[0]); i++) {
+    for (size_t i = 0; i < sizeof(vars) / sizeof(vars[0]); i++) {
         vars[i] = 0;
     }
 }
@@ -412,11 +419,13 @@ node* term(uint16_t lineno, uint16_t* offset) {
     // TODO:
     /* if (tok.type == tkIdent) { */
     /*     n = newNode(ndIdent, NULL, NULL); */
-    /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len); */
+    /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len);
+     */
     /*     n->svalue[tok.len] = '\0'; */
     /* } else if (tok.type == tkString) { */
     /*     n = newNode(ndString, NULL, NULL); */
-    /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len); */
+    /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len);
+     */
     /*     n->svalue[tok.len] = '\0'; */
     /* } else if (tok.type == tkNumber) { */
     /*     n = newNode(ndInteger, NULL, NULL); */
