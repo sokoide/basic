@@ -114,6 +114,38 @@ START_TEST(test_linePos) {
 }
 END_TEST
 
+START_TEST(test_skipSpaces) {
+    char buf[] = "   foo";
+    uint8_t len = strlen(buf);
+
+    uint16_t offset = 0;
+
+    skipSpaces(buf, len, &offset);
+    ck_assert_int_eq(3, offset);
+}
+END_TEST
+
+START_TEST(test_getToken) {
+    char buf[] = "print 10";
+    uint8_t len = strlen(buf);
+
+    uint16_t offset = 0;
+    token tok;
+
+    tok = getToken(buf, len, &offset, false);
+
+    ck_assert_int_eq(5, offset);
+    ck_assert_int_eq(0, tok.offset);
+    ck_assert_int_eq(5, tok.len);
+    ck_assert_int_eq(tkPrint, tok.type);
+
+    char bufErr[] = "???";
+    offset = 0;
+    tok = getToken(bufErr, 3, &offset, false);
+    ck_assert_int_eq(tkError, tok.type);
+}
+END_TEST
+
 Suite* basic_suite(void) {
     Suite* s;
     TCase* tc_core;
@@ -124,6 +156,8 @@ Suite* basic_suite(void) {
     tcase_add_test(tc_core, test_parseLine);
     tcase_add_test(tc_core, test_upsertLine);
     tcase_add_test(tc_core, test_linePos);
+    tcase_add_test(tc_core, test_skipSpaces);
+    tcase_add_test(tc_core, test_getToken);
     suite_add_tcase(s, tc_core);
 
     return s;

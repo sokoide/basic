@@ -34,7 +34,8 @@ void start() {
             if (b)
                 sprintf(msg, "line:%d, %s\r\n", lineno, instr);
             else
-                sprintf(msg, "failed to usertLine %d, %s\r\n", lineno, instr);
+                sprintf(msg, "failed to update/insert line  %d, %s\r\n", lineno,
+                        instr);
         } else {
             sprintf(msg, "line number must be between 1 and %d\r\n",
                     MAX_LINE_LEN);
@@ -70,9 +71,26 @@ void list() {
 void newList() { resetLines(); }
 
 void run() {
-    uint16_t lineno = 1;
     node* n;
     token tok;
+
+    uint16_t idx = 0;
+    char buf[MAX_LINE_LEN + 1];
+    basline* p;
+
+    while (idx < MAX_BASMEM) {
+        p = (basline*)&lines[idx];
+        if (p->lineno == 0)
+            break;
+        strncpy(buf, p->line, p->len);
+        buf[p->len] = '\0';
+        uint16_t offset = 0;
+        tok = getToken(buf, p->len, &offset, false);
+
+        // TODO: execute the line
+        // TODO: next line or GOTO
+        idx += 3 + p->len;
+    }
     // TODO:
 
     /* while (lineno <= MAX_LINES) { */
@@ -169,128 +187,117 @@ void getLine(char* buf, size_t len) {
 #endif
 }
 
-void skipSpaces(uint16_t lineno, uint16_t* offset) {
-    // TODO:
-    /* uint16_t i = 0; */
-    /* char c = lines[lineno - 1][*offset + i]; */
-    /* while (*offset + i < LINE_LEN && c == ' ') { */
-    /*     i++; */
-    /*     c = lines[lineno - 1][*offset + i]; */
-    /* } */
-    /* *offset = *offset + i; */
+void skipSpaces(const char* buf, uint8_t len, uint16_t* offset) {
+    uint16_t i = 0;
+    char c = buf[*offset + i];
+    while (*offset + i < len && c == ' ') {
+        i++;
+        c = buf[*offset + i];
+    }
+    *offset = *offset + i;
 }
 
-token getToken(uint16_t lineno, uint16_t* offset, bool peek) {
+token getToken(const char* buf, uint8_t len, uint16_t* offset, bool peek) {
     token tok;
-    return tok;
+    skipSpaces(buf, len, offset);
+    tok.offset = *offset;
 
-    // TODO:
-    /* uint16_t i = 0; */
-    /*  */
-    /* skipSpaces(lineno, offset); */
-    /* tok.lineno = lineno; */
-    /* tok.start = *offset; */
-    /*  */
-    /* if (*offset >= LINE_LEN) { */
-    /*     tok.type = tkNull; */
-    /*     return tok; */
-    /* } */
-    /*  */
-    /* char c = lines[lineno - 1][*offset + i]; */
-    /* if (c == '\0') { */
-    /*     tok.type = tkNull; */
-    /*     return tok; */
-    /* } else if (c == '"') { */
-    /*     // tkString */
-    /*     tok.type = tkString; */
-    /*     tok.start = *offset + 1; */
-    /*     i++; */
-    /*     c = lines[lineno - 1][*offset + i]; */
-    /*     while (*offset + i < LINE_LEN && c != '"') { */
-    /*         i++; */
-    /*         c = lines[lineno - 1][*offset + i]; */
-    /*     } */
-    /*     tok.len = i - 1; */
-    /* } else if (c == '=') { */
-    /*     tok.type = tkAssign; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c == '(') { */
-    /*     tok.type = tkLp; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c == ')') { */
-    /*     tok.type = tkRp; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c >= '0' && c <= '9') { */
-    /*     tok.type = tkNumber; */
-    /*     c = lines[lineno - 1][*offset + i]; */
-    /*     while (*offset + i < LINE_LEN && c >= '0' && c <= '9') { */
-    /*         i++; */
-    /*         c = lines[lineno - 1][*offset + i]; */
-    /*     } */
-    /*     tok.len = i; */
-    /* } else if (c == '+') { */
-    /*     tok.type = tkAdd; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c == '-') { */
-    /*     tok.type = tkSub; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c == '*') { */
-    /*     tok.type = tkMul; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c == '/') { */
-    /*     tok.type = tkDiv; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (c == '%') { */
-    /*     tok.type = tkMod; */
-    /*     tok.start = *offset; */
-    /*     tok.len = 1; */
-    /*     i++; */
-    /* } else if (isalpha(c)) { */
-    /*     // keyword or ident */
-    /*     tok.start = *offset; */
-    /*     i++; */
-    /*     c = lines[lineno - 1][*offset + i]; */
-    /*     while (*offset + i < LINE_LEN && isalnum(c)) { */
-    /*         i++; */
-    /*         c = lines[lineno - 1][*offset + i]; */
-    /*     } */
-    /*     tok.len = i; */
-    /*     if (strncmp("goto", &lines[lineno - 1][tok.start], tok.len)
-     * == 0) {
-     */
-    /*         tok.type = tkGoto; */
-    /*     } else if (strncmp("if", &lines[lineno - 1][tok.start],
-     * tok.len) == 0) { */
-    /*         tok.type = tkIf; */
-    /*     } else if (strncmp("print", &lines[lineno - 1][tok.start],
-     * tok.len)
-     * == */
-    /*                0) { */
-    /*         tok.type = tkPrint; */
-    /*     } else { */
-    /*         tok.type = tkIdent; */
-    /*     } */
-    /* } else { */
-    /*     syntaxError(lineno); */
-    /* } */
-    /*  */
-    /* if (!peek) */
-    /*     *offset = *offset + i; */
-    /* return tok; */
+    if (*offset >= len) {
+        tok.type = tkNull;
+        return tok;
+    }
+    uint16_t i = 0;
+    char c = buf[*offset + i];
+
+    if (c == '\0') {
+        tok.type = tkNull;
+        return tok;
+    } else if (c == '"') {
+        // tkString
+        tok.type = tkString;
+        tok.offset = *offset + 1;
+        i++;
+        c = buf[*offset + i];
+        while (*offset + i < len && c != '"') {
+            i++;
+            c = buf[*offset + i];
+        }
+        tok.len = i - 1;
+    } else if (c == '=') {
+        tok.type = tkAssign;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c == '(') {
+        tok.type = tkLp;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c == ')') {
+        tok.type = tkRp;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c >= '0' && c <= '9') {
+        tok.type = tkNumber;
+        c = buf[*offset + i];
+        while (*offset + i < len && c >= '0' && c <= '9') {
+            i++;
+            c = buf[*offset + i];
+        }
+        tok.len = i;
+    } else if (c == '+') {
+        tok.type = tkAdd;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c == '-') {
+        tok.type = tkSub;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c == '*') {
+        tok.type = tkMul;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c == '/') {
+        tok.type = tkDiv;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (c == '%') {
+        tok.type = tkMod;
+        tok.offset = *offset;
+        tok.len = 1;
+        i++;
+    } else if (isalpha(c)) {
+        // keyword or ident
+        tok.offset = *offset;
+        i++;
+        c = buf[*offset + i];
+        while (*offset + i < len && isalnum(c)) {
+            i++;
+            c = buf[*offset + i];
+        }
+        tok.len = i;
+        if (strncmp("goto", &buf[tok.offset], tok.len) == 0) {
+
+            tok.type = tkGoto;
+        } else if (strncmp("if", &buf[tok.offset], tok.len) == 0) {
+            tok.type = tkIf;
+        } else if (strncmp("print", &buf[tok.offset], tok.len) == 0) {
+            tok.type = tkPrint;
+        } else {
+            tok.type = tkIdent;
+        }
+    } else {
+        tok.type = tkError;
+        return tok;
+    }
+    if (!peek)
+        *offset = *offset + i;
+    return tok;
 }
 
 void reset() {
@@ -347,11 +354,12 @@ void freeNode(node* n) {
  * if yes, proceeds the offset (consumes) and return true
  */
 bool consume(tokType type, uint16_t lineno, uint16_t* offset) {
-    token tok = getToken(lineno, offset, true);
-    if (tok.type == type) {
-        getToken(lineno, offset, false);
-        return true;
-    }
+    // TODO:
+    /* token tok = getToken(lineno, offset, true); */
+    /* if (tok.type == type) { */
+    /*     getToken(lineno, offset, false); */
+    /*     return true; */
+    /* } */
     return false;
 }
 
@@ -415,8 +423,8 @@ node* term(uint16_t lineno, uint16_t* offset) {
         return n;
     }
 
-    token tok = getToken(lineno, offset, false);
     // TODO:
+    /* token tok = getToken(lineno, offset, false); */
     /* if (tok.type == tkIdent) { */
     /*     n = newNode(ndIdent, NULL, NULL); */
     /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len);
@@ -520,10 +528,10 @@ uint16_t tok2I(token* t) {
         print("Tok2I error");
     }
     uint16_t ret = 0;
-    for (int i = t->start; i < (t->start + t->len); i++) {
-        // TODO:
-        /* ret = ret * 10 + lines[t->lineno - 1][i] - '0'; */
-    }
+    /* for (int i = t->start; i < (t->start + t->len); i++) { */
+    // TODO:
+    /* ret = ret * 10 + lines[t->lineno - 1][i] - '0'; */
+    /* } */
     return ret;
 }
 

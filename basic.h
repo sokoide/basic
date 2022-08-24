@@ -44,6 +44,7 @@ typedef struct _node {
 
 typedef enum _tokenType {
     tkNull,
+    tkError,
     // keyword
     tkGoto,
     tkIf,
@@ -65,9 +66,8 @@ typedef enum _tokenType {
 
 typedef struct _token {
     tokType type;
-    uint16_t lineno;
-    uint16_t start; // first character's offset of the line
-    uint16_t len;   // token length
+    uint16_t offset; // first character's offset in the buffer you specify
+    uint8_t len;     // token length
 } token;
 
 typedef struct _basline {
@@ -82,15 +82,17 @@ void list();
 void newList();
 void run();
 void getLine(char* buf, size_t len);
-void skipSpaces(uint16_t lineno, uint16_t* offset);
-token getToken(uint16_t lineno, uint16_t* offset, bool peek);
+void skipSpaces(const char* buf, uint8_t len, uint16_t* offset);
+token getToken(const char* buf, uint8_t len, uint16_t* offset, bool peek);
 void reset();
 void resetNodes();
 void resetVars();
 void resetLines();
+
 node* newNode(nodeType type, node* lhs, node* rhs);
 void freeNode(node* n);
 bool consume(tokType type, uint16_t lineno, uint16_t* offset);
+
 node* expr(uint16_t lineno, uint16_t* offset);
 node* add(uint16_t lineno, uint16_t* offset);
 node* mod(uint16_t lineno, uint16_t* offset);
@@ -98,6 +100,7 @@ node* mul(uint16_t lineno, uint16_t* offset);
 node* term(uint16_t lineno, uint16_t* offset);
 node* evaluateExpression(uint16_t lineno, uint16_t* offset);
 void eval(node* n);
+
 uint16_t parseLine(char* buf, size_t len, char** instr);
 void syntaxError(uint16_t lineno);
 uint16_t tok2I(token* t);
