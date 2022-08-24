@@ -436,10 +436,9 @@ node* term(const char* buf, uint8_t len, uint16_t* offset) {
     } else if (tok.type == tkNumber) {
         n = newNode(ndInteger, NULL, NULL);
         n->type = ndInteger;
-        n->ivalue = tok2I(&tok);
+        n->ivalue = tok2I(buf, &tok);
     } else {
-        // TODO:
-        /* syntaxError(lineno); */
+        syntaxError(buf, len);
     }
 
     return n;
@@ -516,21 +515,24 @@ uint16_t parseLine(char* buf, size_t len, char** instr) {
     return lineno;
 }
 
-void syntaxError(uint16_t lineno) {
+void syntaxError(const char* buf, uint8_t len) {
     char msg[64];
-    sprintf(msg, "* Syntax error in line %d", lineno);
+    char lineCopy[MAX_LINE_LEN + 1];
+    strncpy(lineCopy, buf, len);
+    lineCopy[len] = '\0';
+
+    sprintf(msg, "* Syntax error in %s", lineCopy);
     print(msg);
 }
 
-uint16_t tok2I(token* t) {
+uint16_t tok2I(const char* buf, token* t) {
     if (t->type != tkNumber) {
         print("Tok2I error");
     }
     uint16_t ret = 0;
-    /* for (int i = t->start; i < (t->start + t->len); i++) { */
-    // TODO:
-    /* ret = ret * 10 + lines[t->lineno - 1][i] - '0'; */
-    /* } */
+    for (int i = t->offset; i < (t->offset + t->len); i++) {
+        ret = ret * 10 + buf[i] - '0';
+    }
     return ret;
 }
 

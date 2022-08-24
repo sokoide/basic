@@ -102,8 +102,8 @@ node* evaluateExpression(const char* buf, uint8_t len, uint16_t* offset);
 void eval(node* n);
 
 uint16_t parseLine(char* buf, size_t len, char** instr);
-void syntaxError(uint16_t lineno);
-uint16_t tok2I(token* t);
+void syntaxError(const char* buf, uint8_t len);
+uint16_t tok2I(const char* buf, token* t);
 bool upsertLine(uint16_t lineno, const char* line);
 uint8_t* linePos(uint16_t lineno, uint8_t* len);
 void moveMemoryDown(char* srcStart, char* srcEnd, char* dstEnd);
