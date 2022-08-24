@@ -353,13 +353,13 @@ void freeNode(node* n) {
 /* check if the next token is 'type'.
  * if yes, proceeds the offset (consumes) and return true
  */
-bool consume(tokType type, uint16_t lineno, uint16_t* offset) {
-    // TODO:
-    /* token tok = getToken(lineno, offset, true); */
-    /* if (tok.type == type) { */
-    /*     getToken(lineno, offset, false); */
-    /*     return true; */
-    /* } */
+bool consume(tokType type, const char* buf, uint8_t len, uint16_t* offset) {
+    token tok = getToken(buf, len, offset, true);
+    if (tok.type == type) {
+        getToken(buf, len, offset, false);
+        return true;
+    }
+
     return false;
 }
 
@@ -378,24 +378,26 @@ node* expr(uint16_t lineno, uint16_t* offset) {
 node* add(uint16_t lineno, uint16_t* offset) {
     node* n = mod(lineno, offset);
     while (true) {
-        if (consume(tkAdd, lineno, offset)) {
-            n = newNode(ndAdd, n, mod(lineno, offset));
-        } else if (consume(tkSub, lineno, offset)) {
-            n = newNode(ndSub, n, mod(lineno, offset));
-        } else {
-            return n;
-        }
+        // TODO:
+        /* if (consume(tkAdd, lineno, offset)) { */
+        /*     n = newNode(ndAdd, n, mod(lineno, offset)); */
+        /* } else if (consume(tkSub, lineno, offset)) { */
+        /*     n = newNode(ndSub, n, mod(lineno, offset)); */
+        /* } else { */
+        /*     return n; */
+        /* } */
     }
 }
 
 node* mod(uint16_t lineno, uint16_t* offset) {
     node* n = mul(lineno, offset);
     while (true) {
-        if (consume(tkMod, lineno, offset)) {
-            n = newNode(ndMod, n, mul(lineno, offset));
-        } else {
-            return n;
-        }
+        // TODO:
+        /* if (consume(tkMod, lineno, offset)) { */
+        /*     n = newNode(ndMod, n, mul(lineno, offset)); */
+        /* } else { */
+        /*     return n; */
+        /* } */
     }
     return n;
 }
@@ -403,25 +405,27 @@ node* mod(uint16_t lineno, uint16_t* offset) {
 node* mul(uint16_t lineno, uint16_t* offset) {
     node* n = term(lineno, offset);
     while (true) {
-        if (consume(tkMul, lineno, offset)) {
-            n = newNode(ndMul, n, term(lineno, offset));
-        } else if (consume(tkDiv, lineno, offset)) {
-            n = newNode(ndDiv, n, term(lineno, offset));
-        } else {
-            return n;
-        }
+        // TODO:
+        /* if (consume(tkMul, lineno, offset)) { */
+        /*     n = newNode(ndMul, n, term(lineno, offset)); */
+        /* } else if (consume(tkDiv, lineno, offset)) { */
+        /*     n = newNode(ndDiv, n, term(lineno, offset)); */
+        /* } else { */
+        /*     return n; */
+        /* } */
     }
 }
 
 node* term(uint16_t lineno, uint16_t* offset) {
     node* n = NULL;
-    if (consume(tkLp, lineno, offset)) {
-        n = expr(lineno, offset);
-        if (!consume(tkRp, lineno, offset)) {
-            print("matching ) doesn't exist");
-        }
-        return n;
-    }
+    // TODO:
+    /* if (consume(tkLp, lineno, offset)) { */
+    /*     n = expr(lineno, offset); */
+    /*     if (!consume(tkRp, lineno, offset)) { */
+    /*         print("matching ) doesn't exist"); */
+    /*     } */
+    /*     return n; */
+    /* } */
 
     // TODO:
     /* token tok = getToken(lineno, offset, false); */

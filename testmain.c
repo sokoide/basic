@@ -146,6 +146,39 @@ START_TEST(test_getToken) {
 }
 END_TEST
 
+START_TEST(test_consume) {
+    char buf[] = "if a-3 goto 30";
+    uint8_t len = strlen(buf);
+
+    uint16_t offset = 0;
+    bool ret;
+
+    ret = consume(tkIf, buf, len, &offset);
+    ck_assert_int_eq(true, ret);
+    ck_assert_int_eq(2, offset);
+
+    ret = consume(tkPrint, buf, len, &offset);
+    ck_assert_int_eq(false, ret);
+    ck_assert_int_eq(3, offset);
+
+    ret = consume(tkIdent, buf, len, &offset);
+    ck_assert_int_eq(true, ret);
+    ck_assert_int_eq(4, offset);
+
+    ret = consume(tkSub, buf, len, &offset);
+    ck_assert_int_eq(true, ret);
+    ck_assert_int_eq(5, offset);
+
+    ret = consume(tkNumber, buf, len, &offset);
+    ck_assert_int_eq(true, ret);
+    ck_assert_int_eq(6, offset);
+
+    ret = consume(tkGoto, buf, len, &offset);
+    ck_assert_int_eq(true, ret);
+    ck_assert_int_eq(11, offset);
+}
+END_TEST
+
 Suite* basic_suite(void) {
     Suite* s;
     TCase* tc_core;
@@ -158,6 +191,7 @@ Suite* basic_suite(void) {
     tcase_add_test(tc_core, test_linePos);
     tcase_add_test(tc_core, test_skipSpaces);
     tcase_add_test(tc_core, test_getToken);
+    tcase_add_test(tc_core, test_consume);
     suite_add_tcase(s, tc_core);
 
     return s;

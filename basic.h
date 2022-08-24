@@ -91,7 +91,7 @@ void resetLines();
 
 node* newNode(nodeType type, node* lhs, node* rhs);
 void freeNode(node* n);
-bool consume(tokType type, uint16_t lineno, uint16_t* offset);
+bool consume(tokType type, const char* buf, uint8_t len, uint16_t* offset);
 
 node* expr(uint16_t lineno, uint16_t* offset);
 node* add(uint16_t lineno, uint16_t* offset);
