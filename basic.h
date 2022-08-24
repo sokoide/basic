@@ -93,12 +93,12 @@ node* newNode(nodeType type, node* lhs, node* rhs);
 void freeNode(node* n);
 bool consume(tokType type, const char* buf, uint8_t len, uint16_t* offset);
 
-node* expr(uint16_t lineno, uint16_t* offset);
-node* add(uint16_t lineno, uint16_t* offset);
-node* mod(uint16_t lineno, uint16_t* offset);
-node* mul(uint16_t lineno, uint16_t* offset);
-node* term(uint16_t lineno, uint16_t* offset);
-node* evaluateExpression(uint16_t lineno, uint16_t* offset);
+node* expr(const char* buf, uint8_t len, uint16_t* offset);
+node* add(const char* buf, uint8_t len, uint16_t* offset);
+node* mod(const char* buf, uint8_t len, uint16_t* offset);
+node* mul(const char* buf, uint8_t len, uint16_t* offset);
+node* term(const char* buf, uint8_t len, uint16_t* offset);
+node* evaluateExpression(const char* buf, uint8_t len, uint16_t* offset);
 void eval(node* n);
 
 uint16_t parseLine(char* buf, size_t len, char** instr);

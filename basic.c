@@ -370,88 +370,83 @@ bool consume(tokType type, const char* buf, uint8_t len, uint16_t* offset) {
  * mul  = term ('*' term | '/' term)*
  * term = IDENT | STRING | NUMBER | '(' expr ')'
  */
-node* expr(uint16_t lineno, uint16_t* offset) {
-    node* n = add(lineno, offset);
+node* expr(const char* buf, uint8_t len, uint16_t* offset) {
+    node* n = add(buf, len, offset);
     return n;
 }
 
-node* add(uint16_t lineno, uint16_t* offset) {
-    node* n = mod(lineno, offset);
+node* add(const char* buf, uint8_t len, uint16_t* offset) {
+    node* n = mod(buf, len, offset);
     while (true) {
-        // TODO:
-        /* if (consume(tkAdd, lineno, offset)) { */
-        /*     n = newNode(ndAdd, n, mod(lineno, offset)); */
-        /* } else if (consume(tkSub, lineno, offset)) { */
-        /*     n = newNode(ndSub, n, mod(lineno, offset)); */
-        /* } else { */
-        /*     return n; */
-        /* } */
+        if (consume(tkAdd, buf, len, offset)) {
+            n = newNode(ndAdd, n, mod(buf, len, offset));
+        } else if (consume(tkSub, buf, len, offset)) {
+            n = newNode(ndSub, n, mod(buf, len, offset));
+        } else {
+            return n;
+        }
     }
 }
 
-node* mod(uint16_t lineno, uint16_t* offset) {
-    node* n = mul(lineno, offset);
+node* mod(const char* buf, uint8_t len, uint16_t* offset) {
+    node* n = mul(buf, len, offset);
     while (true) {
-        // TODO:
-        /* if (consume(tkMod, lineno, offset)) { */
-        /*     n = newNode(ndMod, n, mul(lineno, offset)); */
-        /* } else { */
-        /*     return n; */
-        /* } */
+        if (consume(tkMod, buf, len, offset)) {
+            n = newNode(ndMod, n, mul(buf, len, offset));
+        } else {
+            return n;
+        }
     }
     return n;
 }
 
-node* mul(uint16_t lineno, uint16_t* offset) {
-    node* n = term(lineno, offset);
+node* mul(const char* buf, uint8_t len, uint16_t* offset) {
+    node* n = term(buf, len, offset);
     while (true) {
-        // TODO:
-        /* if (consume(tkMul, lineno, offset)) { */
-        /*     n = newNode(ndMul, n, term(lineno, offset)); */
-        /* } else if (consume(tkDiv, lineno, offset)) { */
-        /*     n = newNode(ndDiv, n, term(lineno, offset)); */
-        /* } else { */
-        /*     return n; */
-        /* } */
+        if (consume(tkMul, buf, len, offset)) {
+            n = newNode(ndMul, n, term(buf, len, offset));
+        } else if (consume(tkDiv, buf, len, offset)) {
+            n = newNode(ndDiv, n, term(buf, len, offset));
+        } else {
+            return n;
+        }
     }
 }
 
-node* term(uint16_t lineno, uint16_t* offset) {
+node* term(const char* buf, uint8_t len, uint16_t* offset) {
     node* n = NULL;
-    // TODO:
-    /* if (consume(tkLp, lineno, offset)) { */
-    /*     n = expr(lineno, offset); */
-    /*     if (!consume(tkRp, lineno, offset)) { */
-    /*         print("matching ) doesn't exist"); */
-    /*     } */
-    /*     return n; */
-    /* } */
+    if (consume(tkLp, buf, len, offset)) {
+        n = expr(buf, len, offset);
+        if (!consume(tkRp, buf, len, offset)) {
+            print("matching ) doesn't exist");
+        }
+        return n;
+    }
 
-    // TODO:
-    /* token tok = getToken(lineno, offset, false); */
-    /* if (tok.type == tkIdent) { */
-    /*     n = newNode(ndIdent, NULL, NULL); */
-    /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len);
-     */
-    /*     n->svalue[tok.len] = '\0'; */
-    /* } else if (tok.type == tkString) { */
-    /*     n = newNode(ndString, NULL, NULL); */
-    /*     strncpy(n->svalue, &lines[lineno - 1][tok.start], tok.len);
-     */
-    /*     n->svalue[tok.len] = '\0'; */
-    /* } else if (tok.type == tkNumber) { */
-    /*     n = newNode(ndInteger, NULL, NULL); */
-    /*     n->type = ndInteger; */
-    /*     n->ivalue = tok2I(&tok); */
-    /* } else { */
-    /*     syntaxError(lineno); */
-    /* } */
+    token tok = getToken(buf, len, offset, false);
+    if (tok.type == tkIdent) {
+        n = newNode(ndIdent, NULL, NULL);
+        strncpy(n->svalue, &buf[tok.offset], tok.len);
+
+        n->svalue[tok.len] = '\0';
+    } else if (tok.type == tkString) {
+        n = newNode(ndString, NULL, NULL);
+        strncpy(n->svalue, &buf[tok.offset], tok.len);
+        n->svalue[tok.len] = '\0';
+    } else if (tok.type == tkNumber) {
+        n = newNode(ndInteger, NULL, NULL);
+        n->type = ndInteger;
+        n->ivalue = tok2I(&tok);
+    } else {
+        // TODO:
+        /* syntaxError(lineno); */
+    }
 
     return n;
 }
 
-node* evaluateExpression(uint16_t lineno, uint16_t* offset) {
-    node* n = expr(lineno, offset);
+node* evaluateExpression(const char* buf, uint8_t len, uint16_t* offset) {
+    node* n = expr(buf, len, offset);
     eval(n);
     return n;
 }
