@@ -10,9 +10,10 @@
 * `new`, `list` and `run` are available in interactive mode
 * variables are 32bit signed integers
 * `+`, `-`, `*`, `/`, `%` are supported
-* expression evaluation only has 64 nodes to make a temporary parse tree for condtion in `if`
-* basic line number must be between 1 and 200 (inclusive)
-* max characters per line is 32
+* expression evaluation only has 64 nodes (`MAX_NODES`) to make a temporary parse tree for condtion in `if`
+* basic line number must be between 1 and 65535 (inclusive)
+* max characters per line is 255 exclude the last '\0'
+* max basic program storage is 4096 (`MAX_BASMEM`)
 * please refer to `test.bas` and `test2.bas` for more details
 
 ## Unit Test Requirements
@@ -22,7 +23,10 @@
 ## Example
 
 ```
-$ make test2
+$ make itest2
+clang -std=c17 -Wall -g -O0 -I. -I/opt/homebrew/include -c main.c -o /Users/scott/tmp/hoge/main.o
+clang -std=c17 -Wall -g -O0 -I. -I/opt/homebrew/include -c basic.c -o /Users/scott/tmp/hoge/basic.o
+clang -std=c17 -Wall -g -O0 -I. -I/opt/homebrew/include /Users/scott/tmp/hoge/main.o /Users/scott/tmp/hoge/basic.o -o ~/tmp/hoge/bas
 ~/tmp/hoge/bas < test2.bas
 > line:1, a=1
 > line:2, if a%15 goto  11
@@ -31,7 +35,7 @@ $ make test2
 > line:11, if a%3 goto 21
 > line:12, print "fizz"
 > line:13, goto 51
-> line:21, if a%5 goto 31
+> line:21, if a%5 goto 50
 > line:22, print "buzz"
 > line:23, goto 51
 > line:50, print a
@@ -68,5 +72,7 @@ fizz
 28
 29
 fizzbuzz
+> used: 184
+free: 3912
 >
 ```

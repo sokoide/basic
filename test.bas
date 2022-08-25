@@ -1,3 +1,4 @@
+mem
 1 print "hoge"
 3 print "piyo"
 2 print "page"
@@ -19,3 +20,4 @@
 32 if a%3 print "bar"
 list
 run
+mem

@@ -19,6 +19,8 @@ void start() {
 
     if (strcmp("list", buf) == 0) {
         list();
+    } else if (strcmp("mem", buf) == 0) {
+        mem();
     } else if (strcmp("run", buf) == 0) {
         run();
     } else if (strcmp("new", buf) == 0) {
@@ -70,89 +72,105 @@ void list() {
 
 void newList() { resetLines(); }
 
-void run() {
-    node* n;
-    token tok;
+void mem() {
+    char msg[64];
+    sprintf(msg, "used: %d\n", szLines);
+    print(msg);
+    sprintf(msg, "free: %d\n", MAX_BASMEM - szLines);
+    print(msg);
+}
 
+void run() {
     uint16_t idx = 0;
-    char buf[MAX_LINE_LEN + 1];
     basline* p;
 
     while (idx < MAX_BASMEM) {
         p = (basline*)&lines[idx];
         if (p->lineno == 0)
             break;
-        strncpy(buf, p->line, p->len);
-        buf[p->len] = '\0';
-        uint16_t offset = 0;
-        tok = getToken(buf, p->len, &offset, false);
 
-        // TODO: execute the line
-        // TODO: next line or GOTO
-        idx += 3 + p->len;
+        // execute the line
+        idx = executeLine(idx);
     }
-    // TODO:
+}
 
-    /* while (lineno <= MAX_LINES) { */
-    /*     if (lines[lineno - 1][0] == '\0') { */
-    /*         lineno++; */
-    /*         continue; */
-    /*     } */
-    /*     uint16_t offset = 0; */
-    /*     tok = getToken(lineno, &offset, false); */
-    /*     bool done = false; */
-    /*     int idx; */
-    /*     while (!done) { */
-    /*         if (tok.type == tkPrint) { */
-    /*             n = evaluateExpression(lineno, &offset); */
-    /*             if (n->type == ndString) { */
-    /*                 print(n->svalue); */
-    /*             } else if (n->type == ndInteger || n->type ==
-     * ndIdent) { */
-    /*                 char msg[32]; */
-    /*                 sprintf(msg, "%d", n->ivalue); */
-    /*                 print(msg); */
-    /*             } */
-    /*             freeNode(n); */
-    /*             print("\r\n"); */
-    /*             done = true; */
-    /*         } else if (tok.type == tkGoto) { */
-    /*             done = true; */
-    /*             n = evaluateExpression(lineno, &offset); */
-    /*             // since it's incremented outside of the while loop
-     */
-    /*             lineno = n->ivalue - 1; */
-    /*             freeNode(n); */
-    /*         } else if (tok.type == tkIf) { */
-    /*             n = evaluateExpression(lineno, &offset); */
-    /*             if ((n->type == ndInteger || n->type == ndIdent) &&
-     */
-    /*                 n->ivalue == 0) { */
-    /*                 done = true; */
-    /*             } else { */
-    /*                 tok = getToken(lineno, &offset, false); */
-    /*             } */
-    /*             freeNode(n); */
-    /*         } else if (tok.type == tkIdent) { */
-    /*             // assign (e.g a=40+2) */
-    /*             if (!consume(tkAssign, lineno, &offset)) { */
-    /*                 syntaxError(lineno); */
-    /*             } */
-    /*             n = evaluateExpression(lineno, &offset); */
-    /*             idx = lines[lineno - 1][tok.start] - 'a'; */
-    /*             vars[idx] = n->ivalue; */
-    /*  */
-    /*             freeNode(n); */
-    /*             done = true; */
-    /*         } else { */
-    /*             // epxression (e.g 3*2+4*2) */
-    /*             n = evaluateExpression(lineno, &offset); */
-    /*             freeNode(n); */
-    /*             done = true; */
-    /*         } */
-    /*     } */
-    /*     lineno++; */
-    /* } */
+uint16_t executeLine(uint16_t idx) {
+    char buf[MAX_LINE_LEN + 1];
+    token tok;
+    node* n;
+    basline* p = (basline*)&lines[idx];
+    strncpy(buf, p->line, p->len);
+    buf[p->len] = '\0';
+    uint16_t offset = 0;
+
+    tok = getToken(buf, p->len, &offset, false);
+    bool done = false;
+    int idxv;
+    while (!done) {
+        if (tok.type == tkPrint) {
+            n = evaluateExpression(buf, p->len, &offset);
+            if (n->type == ndString) {
+                print(n->svalue);
+            } else if (n->type == ndInteger || n->type == ndIdent) {
+                char msg[32];
+                sprintf(msg, "%d", n->ivalue);
+                print(msg);
+            }
+            freeNode(n);
+            print("\r\n");
+            done = true;
+            idx += 3 + p->len;
+        } else if (tok.type == tkGoto) {
+            n = evaluateExpression(buf, p->len, &offset);
+            done = true;
+            // update idx to the offset of line n
+            idx = getOffsetOfLine(n->ivalue);
+            freeNode(n);
+        } else if (tok.type == tkIf) {
+            n = evaluateExpression(buf, p->len, &offset);
+            if ((n->type == ndInteger || n->type == ndIdent) &&
+                n->ivalue == 0) {
+                done = true;
+                idx += 3 + p->len;
+            } else {
+                tok = getToken(buf, p->len, &offset, false);
+            }
+            freeNode(n);
+        } else if (tok.type == tkIdent) {
+            // assign (e.g a=40+2)
+            if (!consume(tkAssign, buf, p->len, &offset)) {
+                syntaxError(buf, p->len);
+            }
+            n = evaluateExpression(buf, p->len, &offset);
+            idxv = buf[tok.offset] - 'a';
+            vars[idxv] = n->ivalue;
+
+            freeNode(n);
+            done = true;
+            idx += 3 + p->len;
+        } else {
+            // epxression (e.g 3*2+4*2)
+            n = evaluateExpression(buf, p->len, &offset);
+            freeNode(n);
+            done = true;
+            idx += 3 + p->len;
+        }
+    }
+
+    return idx;
+}
+
+uint16_t getOffsetOfLine(int n) {
+    uint16_t i = 0;
+    while (i < MAX_BASMEM) {
+        basline* p = (basline*)&lines[i];
+        if (p->lineno == n)
+            return i;
+        else if (p->lineno == 0)
+            return 0xffff;
+        i += 3 + p->len;
+    }
+    return 0xffff;
 }
 
 void getLine(char* buf, size_t len) {

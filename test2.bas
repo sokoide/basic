@@ -5,7 +5,7 @@
 11 if a%3 goto 21
 12 print "fizz"
 13 goto 51
-21 if a%5 goto 31
+21 if a%5 goto 50
 22 print "buzz"
 23 goto 51
 50 print a
@@ -13,3 +13,4 @@
 52 if a-31 goto 2
 53 goto 100
 run
+mem
