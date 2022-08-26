@@ -24,7 +24,7 @@ void start() {
     } else if (strcmp("run", buf) == 0) {
         run();
     } else if (strcmp("new", buf) == 0) {
-        newList();
+        reset();
     } else if (buf[0] == '\0') {
         exit(0);
     } else {
@@ -39,8 +39,7 @@ void start() {
                 sprintf(msg, "failed to update/insert line  %d, %s\r\n", lineno,
                         instr);
         } else {
-            sprintf(msg, "line number must be between 1 and %d\r\n",
-                    MAX_LINE_LEN);
+            sprintf(msg, "line number must be between 1 and %d\r\n", 0xFFFF);
         }
         print(msg);
     }
@@ -57,6 +56,7 @@ void print(const char* msg) {
 void list() {
     uint16_t idx = 0;
     char buf[MAX_LINE_LEN + 1];
+    char msg[6 + MAX_LINE_LEN + 1];
 
     basline* p;
     while (idx < MAX_BASMEM) {
@@ -65,7 +65,8 @@ void list() {
             break;
         strncpy(buf, p->line, p->len);
         buf[p->len] = '\0';
-        printf("%d %s\n", p->lineno, buf);
+        sprintf(msg, "%d %s\r\n", p->lineno, buf);
+        print(msg);
         idx += 3 + p->len;
     }
 }
@@ -74,9 +75,9 @@ void newList() { resetLines(); }
 
 void mem() {
     char msg[64];
-    sprintf(msg, "used: %d\n", szLines);
+    sprintf(msg, "mem used: %d\r\n", szLines);
     print(msg);
-    sprintf(msg, "free: %d\n", MAX_BASMEM - szLines);
+    sprintf(msg, "mem free: %d\r\n", MAX_BASMEM - szLines);
     print(msg);
 }
 
@@ -326,13 +327,23 @@ void reset() {
 
 void resetNodes() {
     for (int i = 0; i < MAX_NODES; i++) {
-        freeNode(&nodes[i]);
+        nodes[i].type = ndNotUsed;
+        nodes[i].lhs = nodes[i].rhs = NULL;
     }
 }
 
 void resetLines() {
-    for (int i = 0; i < MAX_BASMEM / 4; i += 4) {
-        *((uint32_t*)&lines[i]) = 0;
+    // for some reason, this breaks on Nucleo
+    // uint32_t* p = (uint32_t*)&lines[0];
+    // for (int i = 0; i < MAX_BASMEM / sizeof(uint32_t) ; i++) {
+    //     *p = 0;
+    //     p++;
+    // }
+
+    uint16_t* p = (uint16_t*)&lines[0];
+    for (int i = 0; i < MAX_BASMEM / sizeof(uint16_t); i++) {
+        *p = 0;
+        p++;
     }
     szLines = 0;
 }
@@ -572,7 +583,7 @@ bool upsertLine(uint16_t lineno, const char* line) {
         if (p->lineno == lineno) {
             if (p->len == len) {
                 // same size, update
-                strncpy(p->line, line, len);
+                memcpy(p->line, line, len);
                 return true;
             } else if (p->len > len) {
                 // shorter, shrink
@@ -582,7 +593,7 @@ bool upsertLine(uint16_t lineno, const char* line) {
                 szLines -= diff;
                 p->lineno = lineno;
                 p->len = len;
-                strncpy(p->line, line, len);
+                memcpy(p->line, line, len);
                 return true;
             } else {
                 // longer, expand
@@ -594,11 +605,11 @@ bool upsertLine(uint16_t lineno, const char* line) {
                     szLines += diff;
                     p->lineno = lineno;
                     p->len = len;
-                    strncpy(p->line, line, len);
+                    memcpy(p->line, line, len);
+                    return true;
                 } else {
                     return false;
                 }
-                return true;
             }
         } else if (p->lineno > lineno) {
             // expand
@@ -609,11 +620,11 @@ bool upsertLine(uint16_t lineno, const char* line) {
                 szLines += 3 + len;
                 p->lineno = lineno;
                 p->len = len;
-                strncpy(p->line, line, len);
+                memcpy(p->line, line, len);
+                return true;
             } else {
                 return false;
             }
-            return true;
         } else if (p->lineno == 0) {
             // last line. add here
             if (idx + 3 + len < MAX_BASMEM) {
@@ -621,7 +632,7 @@ bool upsertLine(uint16_t lineno, const char* line) {
                 szLines += 3 + len;
                 p->lineno = lineno;
                 p->len = len;
-                strncpy(p->line, line, len);
+                memcpy(p->line, line, len);
                 return true;
             } else {
                 return false;

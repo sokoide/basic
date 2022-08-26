@@ -7,13 +7,13 @@
 ## Spec
 
 * `if`, `goto` and a-z variables are available in scripts
-* `new`, `list` and `run` are available in interactive mode
+* `new`, `list`, `mem` and `run` are available in interactive mode
 * variables are 32bit signed integers
 * `+`, `-`, `*`, `/`, `%` are supported
 * expression evaluation only has 64 nodes (`MAX_NODES`) to make a temporary parse tree for condtion in `if`
 * basic line number must be between 1 and 65535 (inclusive)
 * max characters per line is 255 exclude the last '\0'
-* max basic program storage is 4096 (`MAX_BASMEM`)
+* max basic program storage is 8192 (`MAX_BASMEM`)
 * please refer to `test.bas` and `test2.bas` for more details
 
 ## Unit Test Requirements
@@ -23,9 +23,6 @@
 ## Example
 
 ```
-$ make itest2
-clang -std=c17 -Wall -g -O0 -I. -I/opt/homebrew/include -c main.c -o /Users/scott/tmp/hoge/main.o
-clang -std=c17 -Wall -g -O0 -I. -I/opt/homebrew/include -c basic.c -o /Users/scott/tmp/hoge/basic.o
 clang -std=c17 -Wall -g -O0 -I. -I/opt/homebrew/include /Users/scott/tmp/hoge/main.o /Users/scott/tmp/hoge/basic.o -o ~/tmp/hoge/bas
 ~/tmp/hoge/bas < test2.bas
 > line:1, a=1
@@ -72,7 +69,7 @@ fizz
 28
 29
 fizzbuzz
-> used: 184
-free: 3912
+> mem used: 184
+mem free: 8008
 >
 ```

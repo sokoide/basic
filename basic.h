@@ -14,7 +14,7 @@
 #define MAX_LINE_NO (65535)
 #define MAX_LINE_LEN (255)
 #define MAX_NODES (64)
-#define MAX_BASMEM (4096)
+#define MAX_BASMEM (8192)
 
 extern char lines[MAX_BASMEM];
 extern uint16_t szLines;
